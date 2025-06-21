@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Urpekaritza - Cuaderno de Buceo</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Iconos Lucide simplificados */
+        .icon { width: 1rem; height: 1rem; display: inline-block; }
+        .icon-plus::before { content: "➕"; }
+        .icon-calendar::before { content: "📅"; }
+        .icon-map-pin::before { content: "📍"; }
+        .icon-clock::before { content: "🕐"; }
+        .icon-thermometer::before { content: "🌡️"; }
+        .icon-eye::before { content: "👁️"; }
+        .icon-fish::before { content: "🐠"; }
+        .icon-download::before { content: "⬇️"; }
+        .icon-upload::before { content: "⬆️"; }
+        .icon-search::before { content: "🔍"; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Componentes de iconos simplificados
+        const Plus = () => <span className="icon icon-plus"></span>;
+        const Calendar = () => <span className="icon icon-calendar"></span>;
+        const MapPin = () => <span className="icon icon-map-pin"></span>;
+        const Clock = () => <span className="icon icon-clock"></span>;
+        const Thermometer = () => <span className="icon icon-thermometer"></span>;
+        const Eye = () => <span className="icon icon-eye"></span>;
+        const Fish = () => <span className="icon icon-fish"></span>;
+        const Download = () => <span className="icon icon-download"></span>;
+        const Upload = () => <span className="icon icon-upload"></span>;
+        const Search = () => <span className="icon icon-search"></span>;
+
+        const DivingLogApp = () => {
+          const [dives, setDives] = useState([]);
+          const [currentView, setCurrentView] = useState('list');
+          const [selectedDive, setSelectedDive] = useState(null);
+          const [searchTerm, setSearchTerm] = useState('');
+          const [filterDepth, setFilterDepth] = useState('all');
+          const [showProfile, setShowProfile] = useState(false);
+          const [language, setLanguage] = useState('es');
+          const [userProfile, setUserProfile] = useState({
+            name: '',
+            diverId: '',
+            photo: null
+          });
+
+          const texts = {
+            es: {
+              appTitle: 'Urpekaritza',
+              myProfile: 'Mi Perfil',
+              newDive: 'Nueva Inmersión',
+              dive: 'Inmersión',
+              profilePhoto: 'Foto de Perfil',
+              changePhoto: 'Cambiar Foto',
+              addPhoto: 'Añadir Foto',
+              personalInfo: 'Información Personal',
+              fullName: 'Nombre Completo',
+              fullNamePlaceholder: 'Tu nombre completo',
+              divingId: 'ID de Submarinismo',
+              divingIdPlaceholder: 'Certificación, número de licencia...',
+              divingIdExample: 'Ej: PADI Open Water #1234567, SSI Advanced #ABC123',
+              myStats: 'Mis Estadísticas',
+              dives: 'Inmersiones',
+              maxDepth: 'Profundidad Máx',
+              totalTime: 'Tiempo Total',
+              avgDepth: 'Prof. Media',
+              saveAndReturn: 'Guardar y Volver',
+              basicInfo: 'Información Básica',
+              date: 'Fecha',
+              time: 'Hora',
+              location: 'Ubicación',
+              locationPlaceholder: 'ej: Costa Brava, Cantábrico...',
+              divePoint: 'Punto de Inmersión',
+              divePointPlaceholder: 'ej: Pecios del Urko, Las Islas...',
+              buddy: 'Compañero/s de Inmersión',
+              buddyPlaceholder: 'ej: Juan, María...',
+              diveParams: 'Parámetros de Inmersión',
+              maxDepthM: 'Prof. Máx (m)',
+              diveType: 'Tipo de Inmersión',
+              diveTypes: {
+                costa: 'Costa',
+                barco: 'Barco',
+                profunda: 'Profunda',
+                nocturna: 'Nocturna',
+                pecio: 'Pecio',
+                cueva: 'Cueva',
+                deriva: 'Deriva'
+              },
+              duration: 'Duración (min)',
+              waterTemp: 'Temp. Agua (°C)',
+              visibility: 'Visibilidad (m)',
+              conditions: 'Condiciones',
+              conditionTypes: {
+                calm: 'Calmado',
+                moderate: 'Moderado',
+                rough: 'Agitado',
+                strong: 'Muy agitado'
+              },
+              equipment: 'Equipamiento',
+              suit: 'Traje',
+              suitTypes: {
+                '3mm wetsuit': 'Neopreno 3mm',
+                '5mm wetsuit': 'Neopreno 5mm',
+                '7mm wetsuit': 'Neopreno 7mm',
+                'dry suit': 'Traje seco',
+                'shorty': 'Shorty'
+              },
+              tank: 'Botella',
+              tankTypes: {
+                'Aluminum 80': 'Aluminio 80',
+                'Steel 85': 'Acero 85',
+                'Steel 100': 'Acero 100',
+                'Aluminum 63': 'Aluminio 63'
+              },
+              weight: 'Lastre (kg)',
+              observations: 'Observaciones Submarinas',
+              wildlife: '🐠 Vida Marina',
+              wildlifePlaceholder: 'peces, corales, crustáceos, moluscos...',
+              seabed: '🪨 Fondo y Topografía',
+              seabedPlaceholder: 'arena, roca, arrecife, formaciones, cuevas...',
+              currents: '🌊 Corrientes y Condiciones',
+              currentsPlaceholder: 'oleaje, termoclinas, corrientes, turbidez...',
+              experience: '💭 Experiencia Personal',
+              experiencePlaceholder: 'sensaciones, dificultades, momentos especiales...',
+              saveDive: 'Guardar Inmersión',
+              exportData: 'Exportar datos',
+              importData: 'Importar datos',
+              searchPlaceholder: 'Buscar ubicación, sitio, fauna...',
+              allDepths: 'Todas las profundidades',
+              shallowDives: 'Poco profundas (≤18m)',
+              mediumDives: 'Medias (18-30m)',
+              deepDives: 'Profundas (>30m)',
+              noDives: 'No hay inmersiones registradas',
+              noResults: 'No se encontraron inmersiones con los filtros aplicados',
+              buddyLabel: 'Compañero/s:',
+              max: 'Max:',
+              min: 'min',
+              vis: 'vis.',
+              exportSuccess: 'Datos copiados al portapapeles.\n\nPega el contenido en un archivo de texto y guárdalo como "diving-log.json"',
+              exportError: 'No se pudo copiar automáticamente. Usa Ctrl+C para copiar los datos mostrados en consola.',
+              importSuccess: 'Datos importados correctamente',
+              importError: 'Error al importar el archivo',
+              invalidImage: 'Por favor selecciona un archivo de imagen válido',
+              exportDataError: 'Error al exportar los datos'
+            },
+            eu: {
+              appTitle: 'Urpekaritza',
+              myProfile: 'Nire Profila',
+              newDive: 'Urpeko Berria',
+              dive: 'Urpekoa',
+              profilePhoto: 'Profilaren Argazkia',
+              changePhoto: 'Argazkia Aldatu',
+              addPhoto: 'Argazkia Gehitu',
+              personalInfo: 'Informazio Pertsonala',
+              fullName: 'Izen Osoa',
+              fullNamePlaceholder: 'Zure izen osoa',
+              divingId: 'Urpeko IDa',
+              divingIdPlaceholder: 'Ziurtagiria, lizentzia zenbakia...',
+              divingIdExample: 'Ad: PADI Open Water #1234567, SSI Advanced #ABC123',
+              myStats: 'Nire Estatistikak',
+              dives: 'Urpekoak',
+              maxDepth: 'Sak. Max',
+              totalTime: 'Denbora Osoa',
+              avgDepth: 'Sak. Batez',
+              saveAndReturn: 'Gorde eta Itzuli',
+              basicInfo: 'Oinarrizko Informazioa',
+              date: 'Data',
+              time: 'Ordua',
+              location: 'Kokalekua',
+              locationPlaceholder: 'ad: Costa Brava, Kantauri itsasoa...',
+              divePoint: 'Urpeko Puntua',
+              divePointPlaceholder: 'ad: Urkoren itsasontzia, Irlak...',
+              buddy: 'Urpeko Laguna/k',
+              buddyPlaceholder: 'ad: Jon, Maria...',
+              diveParams: 'Urpeko Parametroak',
+              maxDepthM: 'Sak. Max (m)',
+              diveType: 'Urpeko Mota',
+              diveTypes: {
+                costa: 'Kostaldea',
+                barco: 'Itsasontzia',
+                profunda: 'Sakona',
+                nocturna: 'Gauekoa',
+                pecio: 'Itsasontzien hondakina',
+                cueva: 'Leizea',
+                deriva: 'Korrontean'
+              },
+              duration: 'Iraupena (min)',
+              waterTemp: 'Uraren Tenp. (°C)',
+              visibility: 'Ikusgaitasuna (m)',
+              conditions: 'Baldintzak',
+              conditionTypes: {
+                calm: 'Lasaia',
+                moderate: 'Ertaina',
+                rough: 'Zakarrak',
+                strong: 'Oso zakarrak'
+              },
+              equipment: 'Ekipamendua',
+              suit: 'Jantziak',
+              suitTypes: {
+                '3mm wetsuit': 'Neopreno 3mm',
+                '5mm wetsuit': 'Neopreno 5mm',
+                '7mm wetsuit': 'Neopreno 7mm',
+                'dry suit': 'Jantzi lehorra',
+                'shorty': 'Laburra'
+              },
+              tank: 'Botila',
+              tankTypes: {
+                'Aluminum 80': 'Aluminio 80',
+                'Steel 85': 'Altzairu 85',
+                'Steel 100': 'Altzairu 100',
+                'Aluminum 63': 'Aluminio 63'
+              },
+              weight: 'Pisua (kg)',
+              observations: 'Itsaspeko Behaketak',
+              wildlife: '🐠 Itsas Fauna',
+              wildlifePlaceholder: 'arrainak, koralak, krustakeoak, moluskoak...',
+              seabed: '🪨 Hondoa eta Topografia',
+              seabedPlaceholder: 'harearekin, harkaitzarekin, arrezifeak, eraikinak, leizeak...',
+              currents: '🌊 Korronteak eta Baldintzak',
+              currentsPlaceholder: 'olatuak, termoklinak, korronteak, zakarrak...',
+              experience: '💭 Esperientzia Pertsonala',
+              experiencePlaceholder: 'sentimenduak, zailtasunak, une bereziak...',
+              saveDive: 'Urpekoa Gorde',
+              exportData: 'Datuak esportatu',
+              importData: 'Datuak inportatu',
+              searchPlaceholder: 'Bilatu kokalekua, tokia, fauna...',
+              allDepths: 'Sakonera guztiak',
+              shallowDives: 'Azalekoak (≤18m)',
+              mediumDives: 'Ertainak (18-30m)',
+              deepDives: 'Sakonak (>30m)',
+              noDives: 'Ez dago urpekorik erregistraturik',
+              noResults: 'Ez da urpekorik aurkitu iragazkiekin',
+              buddyLabel: 'Laguna/k:',
+              max: 'Max:',
+              min: 'min',
+              vis: 'ikus.',
+              exportSuccess: 'Datuak arbelera kopiatu dira.\n\nItsatsi edukia testu fitxategi batean eta gorde "diving-log.json" gisa',
+              exportError: 'Ezin izan da automatikoki kopiatu. Erabili Ctrl+C kontsolan erakutsitako datuak kopiatzeko.',
+              importSuccess: 'Datuak ondo inportatu dira',
+              importError: 'Errorea fitxategia inportatzean',
+              invalidImage: 'Mesedez hautatu baliozko irudi fitxategi bat',
+              exportDataError: 'Errorea datuak esportatzean'
+            }
+          };
+
+          const t = texts[language];
+
+          const [newDive, setNewDive] = useState({
+            date: new Date().toISOString().split('T')[0],
+            time: '09:00',
+            location: '',
+            site: '',
+            buddy: '',
+            maxDepth: '',
+            diveType: 'costa',
+            duration: '',
+            waterTemp: '',
+            visibility: '',
+            conditions: 'calm',
+            equipment: {
+              suit: '7mm wetsuit',
+              tank: 'Aluminum 80',
+              weight: ''
+            },
+            wildlife: '',
+            seabed: '',
+            currents: '',
+            experience: ''
+          });
+
+          useEffect(() => {
+            const savedDives = localStorage.getItem('divingLogDives');
+            if (savedDives) {
+              setDives(JSON.parse(savedDives));
+            }
+            
+            const savedProfile = localStorage.getItem('divingLogProfile');
+            if (savedProfile) {
+              setUserProfile(JSON.parse(savedProfile));
+            }
+            
+            const savedLanguage = localStorage.getItem('divingLogLanguage');
+            if (savedLanguage) {
+              setLanguage(savedLanguage);
+            }
+          }, []);
+
+          useEffect(() => {
+            localStorage.setItem('divingLogLanguage', language);
+          }, [language]);
+
+          useEffect(() => {
+            localStorage.setItem('divingLogProfile', JSON.stringify(userProfile));
+          }, [userProfile]);
+
+          useEffect(() => {
+            localStorage.setItem('divingLogDives', JSON.stringify(dives));
+          }, [dives]);
+
+          const addDive = () => {
+            const dive = {
+              ...newDive,
+              id: Date.now(),
+              diveNumber: dives.length + 1
+            };
+            setDives([dive, ...dives]);
+            setNewDive({
+              date: new Date().toISOString().split('T')[0],
+              time: '09:00',
+              location: '',
+              site: '',
+              buddy: '',
+              maxDepth: '',
+              diveType: 'costa',
+              duration: '',
+              waterTemp: '',
+              visibility: '',
+              conditions: 'calm',
+              equipment: {
+                suit: '7mm wetsuit',
+                tank: 'Aluminum 80',
+                weight: ''
+              },
+              wildlife: '',
+              seabed: '',
+              currents: '',
+              experience: ''
+            });
+            setCurrentView('list');
+          };
+
+          const filteredDives = dives.filter(dive => {
+            const matchesSearch = dive.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                 dive.site.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                 dive.wildlife.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                 (dive.buddy && dive.buddy.toLowerCase().includes(searchTerm.toLowerCase()));
+            
+            const matchesDepth = filterDepth === 'all' || 
+                                (filterDepth === 'shallow' && parseInt(dive.maxDepth) <= 18) ||
+                                (filterDepth === 'medium' && parseInt(dive.maxDepth) > 18 && parseInt(dive.maxDepth) <= 30) ||
+                                (filterDepth === 'deep' && parseInt(dive.maxDepth) > 30);
+            
+            return matchesSearch && matchesDepth;
+          });
+
+          const exportData = () => {
+            try {
+              const dataStr = JSON.stringify(dives, null, 2);
+              navigator.clipboard.writeText(dataStr).then(() => {
+                alert(t.exportSuccess);
+              }).catch(() => {
+                alert(t.exportError);
+                console.log('DATOS DE DIVING LOG:', dataStr);
+              });
+            } catch (error) {
+              alert(t.exportDataError);
+            }
+          };
+
+          const importData = (event) => {
+            const file = event.target.files[0];
+            if (file) {
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                try {
+                  const importedDives = JSON.parse(e.target.result);
+                  setDives(importedDives);
+                  alert(t.importSuccess);
+                } catch (error) {
+                  alert(t.importError);
+                }
+              };
+              reader.readAsText(file);
+            }
+          };
+
+          const handlePhotoUpload = (event) => {
+            const file = event.target.files[0];
+            if (file) {
+              if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                  setUserProfile(prev => ({
+                    ...prev,
+                    photo: e.target.result
+                  }));
+                };
+                reader.readAsDataURL(file);
+              } else {
+                alert(t.invalidImage);
+              }
+            }
+          };
+
+          const removePhoto = () => {
+            setUserProfile(prev => ({
+              ...prev,
+              photo: null
+            }));
+          };
+
+          if (showProfile) {
+            return (
+              <div className="max-w-md mx-auto bg-blue-50 min-h-screen">
+                <div className="bg-blue-600 text-white p-4 flex items-center justify-between">
+                  <button onClick={() => setShowProfile(false)} className="text-xl">←</button>
+                  <h1 className="text-xl font-bold">{t.myProfile}</h1>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => setLanguage(language === 'es' ? 'eu' : 'es')}
+                      className="px-2 py-1 text-xs bg-blue-500 rounded hover:bg-blue-400"
+                    >
+                      {language === 'es' ? 'EU' : 'ES'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-4 space-y-4">
+                  <div className="bg-white rounded-lg p-4 shadow-sm text-center">
+                    <h3 className="font-semibold text-blue-800 mb-4">{t.profilePhoto}</h3>
+                    
+                    <div className="mb-4">
+                      {userProfile.photo ? (
+                        <div className="relative inline-block">
+                          <img 
+                            src={userProfile.photo} 
+                            alt={t.profilePhoto}
+                            className="w-32 h-32 rounded-full object-cover border-4 border-blue-200 mx-auto"
+                          />
+                          <button
+                            onClick={removePhoto}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm hover:bg-red-600"
+                            title="Eliminar foto"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center mx-auto border-4 border-blue-200">
+                          <span className="text-4xl text-gray-400">👤</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <label className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-blue-700 transition-colors">
+                      📷 {userProfile.photo ? t.changePhoto : t.addPhoto}
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={handlePhotoUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <h3 className="font-semibold text-blue-800 mb-4">{t.personalInfo}</h3>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t.fullName}</label>
+                        <input
+                          type="text"
+                          placeholder={t.fullNamePlaceholder}
+                          value={userProfile.name}
+                          onChange={(e) => setUserProfile(prev => ({...prev, name: e.target.value}))}
+                          className="w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t.divingId}</label>
+                        <input
+                          type="text"
+                          placeholder={t.divingIdPlaceholder}
+                          value={userProfile.diverId}
+                          onChange={(e) => setUserProfile(prev => ({...prev, diverId: e.target.value}))}
+                          className="w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          {t.divingIdExample}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {dives.length > 0 && (
+                    <div className="bg-white rounded-lg p-4 shadow-sm">
+                      <h3 className="font-semibold text-blue-800 mb-4">{t.myStats}</h3>
+                      
+                      <div className="grid grid-cols-2 gap-4 text-center">
+                        <div className="bg-blue-50 p-3 rounded-lg">
+                          <div className="text-2xl font-bold text-blue-600">{dives.length}</div>
+                          <div className="text-xs text-gray-600">{t.dives}</div>
+                        </div>
+                        <div className="bg-blue-50 p-3 rounded-lg">
+                          <div className="text-2xl font-bold text-blue-600">
+                            {dives.length > 0 ? Math.max(...dives.map(d => parseInt(d.maxDepth) || 0)) : 0}m
+                          </div>
+                          <div className="text-xs text-gray-600">{t.maxDepth}</div>
+                        </div>
+                        <div className="bg-blue-50 p-3 rounded-lg">
+                          <div className="text-2xl font-bold text-blue-600">
+                            {Math.round(dives.reduce((acc, dive) => acc + (parseInt(dive.duration) || 0), 0) / 60)}h
+                          </div>
+                          <div className="text-xs text-gray-600">{t.totalTime}</div>
+                        </div>
+                        <div className="bg-blue-50 p-3 rounded-lg">
+                          <div className="text-2xl font-bold text-blue-600">
+                            {dives.length > 0 ? Math.round(dives.reduce((acc, dive) => acc + (parseInt(dive.maxDepth) || 0), 0) / dives.length) : 0}m
+                          </div>
+                          <div className="text-xs text-gray-600">{t.avgDepth}</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => setShowProfile(false)}
+                    className="w-full bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                  >
+                    ✅ {t.saveAndReturn}
+                  </button>
+                </div>
+              </div>
+            );
+          }
+
+          // Vista de agregar inmersión
+          if (currentView === 'add') {
+            return (
+              <div className="max-w-md mx-auto bg-blue-50 min-h-screen">
+                <div className="bg-blue-600 text-white p-4 flex items-center justify-between">
+                  <button onClick={() => setCurrentView('list')} className="text-xl">←</button>
+                  <h1 className="text-xl font-bold">{t.newDive}</h1>
+                  <div></div>
+                </div>
+
+                <div className="p-4 space-y-4">
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <h3 className="font-semibold text-blue-800 mb-3">{t.basicInfo}</h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t.date}</label>
+                        <input
+                          type="date"
+                          value={newDive.date}
+                          onChange={(e) => setNewDive({...newDive, date: e.target.value})}
+                          className="w-full p-2 border rounded-md"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t.time}</label>
+                        <input
+                          type="time"
+                          value={newDive.time}
+                          onChange={(e) => setNewDive({...newDive, time: e.target.value})}
+                          className="w-full p-2 border rounded-md"
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-3">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">{t.location}</label>
+                      <input
+                        type="text"
+                        placeholder={t.locationPlaceholder}
+                        value={newDive.location}
+                        onChange={(e) => setNewDive({...newDive, location: e.target.value})}
+                        className="w-full p-2 border rounded-md"
+                      />
+                    </div>
+                    <div className="mt-3">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">{t.divePoint}</label>
+                      <input
+                        type="text"
+                        placeholder={t.divePointPlaceholder}
+                        value={newDive.site}
+                        onChange={(e) => setNewDive({...newDive, site: e.target.value})}
+                        className="w-full p-2 border rounded-md"
+                      />
+                    </div>
+                    <div className="mt-3">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">{t.buddy}</label>
+                      <input
+                        type="text"
+                        placeholder={t.buddyPlaceholder}
+                        value={newDive.buddy}
+                        onChange={(e) => setNewDive({...newDive, buddy: e.target.value})}
+                        className="w-full p-2 border rounded-md"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <h3 className="font-semibold text-blue-800 mb-3">{t.diveParams}</h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t.maxDepthM}</label>
+                        <input
+                          type="number"
+                          value={newDive.maxDepth}
+                          onChange={(e) => setNewDive({...newDive, maxDepth: e.target.value})}
+                          className="w-full p-2 border rounded-md"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t.diveType}</label>
+                        <select
+                          value={newDive.diveType}
+                          onChange={(e) => setNewDive({...newDive, diveType: e.target.value})}
+                          className="w-full p-2 border rounded-md"
+                        >
+                          <option value="costa">{t.diveTypes.costa}</option>
+                          <option value="barco">{t.diveTypes.barco}</option>
+                          <option value="profunda">{t.diveTypes.profunda}</option>
+                          <option value="nocturna">{t.diveTypes.nocturna}</option>
+                          <option value="pecio">{t.diveTypes.pecio}</option>
+                          <option value="cueva">{t.diveTypes.cueva}</option>
+                          <option value="deriva">{t.diveTypes.deriva}</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t.duration}</label>
+                        <input
+                          type="number"
+                          value={newDive.duration}
+                          onChange={(e) => setNewDive({...newDive, duration: e.target.value})}
+                          className="w-full p-2 border rounded-md"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t.waterTemp}</label>
+                        <input
+                          type="number"
+                          value={newDive.waterTemp}
+                          onChange={(e) => setNewDive({...newDive, waterTemp: e.target.value})}
+                          className="w-full p-2 border rounded-md"
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t.visibility}</label>
+                        <input
+                          type="number"
+                          value={newDive.visibility}
+                          onChange={(e) => setNewDive({...newDive, visibility: e.target.value})}
+                          className="w-full p-2 border rounded-md"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t.conditions}</label>
+                        <select
+                          value={newDive.conditions}
+                          onChange={(e) => setNewDive({...newDive, conditions: e.target.value})}
+                          className="w-full p-2 border rounded-md"
+                        >
+                          <option value="calm">{t.conditionTypes.calm}</option>
+                          <option value="moderate">{t.conditionTypes.moderate}</option>
+                          <option value="rough">{t.conditionTypes.rough}</option>
+                          <option value="strong">{t.conditionTypes.strong}</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <h3 className="font-semibold text-blue-800 mb-3">{t.equipment}</h3>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t.suit}</label>
+                        <select
+                          value={newDive.equipment.suit}
+                          onChange={(e) => setNewDive({...newDive, equipment: {...newDive.equipment, suit: e.target.value}})}
+                          className="w-full p-2 border rounded-md"
+                        >
+                          <option value="3mm wetsuit">{t.suitTypes['3mm wetsuit']}</option>
+                          <option value="5mm wetsuit">{t.suitTypes['5mm wetsuit']}</option>
+                          <option value="7mm wetsuit">{t.suitTypes['7mm wetsuit']}</option>
+                          <option value="dry suit">{t.suitTypes['dry suit']}</option>
+                          <option value="shorty">{t.suitTypes.shorty}</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t.tank}</label>
+                        <select
+                          value={newDive.equipment.tank}
+                          onChange={(e) => setNewDive({...newDive, equipment: {...newDive.equipment, tank: e.target.value}})}
+                          className="w-full p-2 border rounded-md"
+                        >
+                          <option value="Aluminum 80">{t.tankTypes['Aluminum 80']}</option>
+                          <option value="Steel 85">{t.tankTypes['Steel 85']}</option>
+                          <option value="Steel 100">{t.tankTypes['Steel 100']}</option>
+                          <option value="Aluminum 63">{t.tankTypes['Aluminum 63']}</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t.weight}</label>
+                        <input
+                          type="number"
+                          value={newDive.equipment.weight}
+                          onChange={(e) => setNewDive({...newDive, equipment: {...newDive.equipment, weight: e.target.value}})}
+                          className="w-full p-2 border rounded-md"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <h3 className="font-semibold text-blue-800 mb-3">{t.observations}</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t.wildlife}</label>
+                        <textarea
+                          placeholder={t.wildlifePlaceholder}
+                          value={newDive.wildlife}
+                          onChange={(e) => setNewDive({...newDive, wildlife: e.target.value})}
+                          className="w-full p-2 border rounded-md h-16"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t.seabed}</label>
+                        <textarea
+                          placeholder={t.seabedPlaceholder}
+                          value={newDive.seabed}
+                          onChange={(e) => setNewDive({...newDive, seabed: e.target.value})}
+                          className="w-full p-2 border rounded-md h-16"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t.currents}</label>
+                        <textarea
+                          placeholder={t.currentsPlaceholder}
+                          value={newDive.currents}
+                          onChange={(e) => setNewDive({...newDive, currents: e.target.value})}
+                          className="w-full p-2 border rounded-md h-16"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t.experience}</label>
+                        <textarea
+                          placeholder={t.experiencePlaceholder}
+                          value={newDive.experience}
+                          onChange={(e) => setNewDive({...newDive, experience: e.target.value})}
+                          className="w-full p-2 border rounded-md h-16"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={addDive}
+                    className="w-full bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                  >
+                    {t.saveDive}
+                  </button>
+                </div>
+              </div>
+            );
+          }
+
+          // Vista de detalle
+          if (currentView === 'detail' && selectedDive) {
+            return (
+              <div className="max-w-md mx-auto bg-blue-50 min-h-screen">
+                <div className="bg-blue-600 text-white p-4 flex items-center justify-between">
+                  <button onClick={() => setCurrentView('list')} className="text-xl">←</button>
+                  <h1 className="text-xl font-bold">{t.dive} #{selectedDive.diveNumber}</h1>
+                  <div></div>
+                </div>
+
+                <div className="p-4 space-y-4">
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center text-blue-600">
+                        <Calendar className="mr-2" />
+                        <span className="font-semibold">{selectedDive.date} - {selectedDive.time}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-center">
+                        <MapPin className="mr-2 text-gray-500" />
+                        <span><strong>{selectedDive.location}</strong> - {selectedDive.site}</span>
+                      </div>
+                      
+                      {selectedDive.buddy && (
+                        <div className="flex items-center">
+                          <span className="text-sm text-gray-600">👥 <strong>{t.buddyLabel}</strong> {selectedDive.buddy}</span>
+                        </div>
+                      )}
+                      
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="flex items-center">
+                          <span className="text-blue-600 font-semibold">📏 {t.max} {selectedDive.maxDepth}m</span>
+                        </div>
+                        <div className="flex items-center">
+                          <span className="text-purple-600 font-semibold">🤿 {t.diveTypes[selectedDive.diveType] || selectedDive.diveType}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <Clock className="mr-1 text-gray-500" />
+                          <span>{selectedDive.duration} {t.min}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <Thermometer className="mr-1 text-gray-500" />
+                          <span>{selectedDive.waterTemp}°C</span>
+                        </div>
+                        <div className="flex items-center">
+                          <Eye className="mr-1 text-gray-500" />
+                          <span>{selectedDive.visibility}m {t.vis}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <span className="text-sm">🌊 {t.conditionTypes[selectedDive.conditions] || selectedDive.conditions}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <h3 className="font-semibold text-blue-800 mb-3">{t.equipment}</h3>
+                    <div className="text-sm space-y-1">
+                      <p><strong>{t.suit}:</strong> {t.suitTypes[selectedDive.equipment.suit] || selectedDive.equipment.suit}</p>
+                      <p><strong>{t.tank}:</strong> {t.tankTypes[selectedDive.equipment.tank] || selectedDive.equipment.tank}</p>
+                      <p><strong>{t.weight}:</strong> {selectedDive.equipment.weight} kg</p>
+                    </div>
+                  </div>
+
+                  {selectedDive.wildlife && (
+                    <div className="bg-white rounded-lg p-4 shadow-sm">
+                      <h3 className="font-semibold text-blue-800 mb-3">{t.wildlife}</h3>
+                      <p className="text-sm">{selectedDive.wildlife}</p>
+                    </div>
+                  )}
+
+                  {selectedDive.seabed && (
+                    <div className="bg-white rounded-lg p-4 shadow-sm">
+                      <h3 className="font-semibold text-blue-800 mb-3">{t.seabed}</h3>
+                      <p className="text-sm">{selectedDive.seabed}</p>
+                    </div>
+                  )}
+
+                  {selectedDive.currents && (
+                    <div className="bg-white rounded-lg p-4 shadow-sm">
+                      <h3 className="font-semibold text-blue-800 mb-3">{t.currents}</h3>
+                      <p className="text-sm">{selectedDive.currents}</p>
+                    </div>
+                  )}
+
+                  {selectedDive.experience && (
+                    <div className="bg-white rounded-lg p-4 shadow-sm">
+                      <h3 className="font-semibold text-blue-800 mb-3">{t.experience}</h3>
+                      <p className="text-sm">{selectedDive.experience}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          }
+
+          // Vista principal (lista)
+          return (
+            <div className="max-w-md mx-auto bg-blue-50 min-h-screen">
+              <div className="bg-blue-600 text-white p-4">
+                {(userProfile.name || userProfile.photo) && (
+                  <div className="flex items-center space-x-3 mb-4 bg-blue-500 rounded-lg p-3">
+                    {userProfile.photo ? (
+                      <img 
+                        src={userProfile.photo} 
+                        alt="Perfil" 
+                        className="w-12 h-12 rounded-full object-cover border-2 border-blue-300"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-blue-400 flex items-center justify-center">
+                        <span className="text-xl text-white">👤</span>
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      {userProfile.name && (
+                        <div className="font-semibold text-white">{userProfile.name}</div>
+                      )}
+                      {userProfile.diverId && (
+                        <div className="text-xs text-blue-100">{userProfile.diverId}</div>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => setShowProfile(true)}
+                      className="text-blue-200 hover:text-white"
+                      title="Editar perfil"
+                    >
+                      ✏️
+                    </button>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between mb-4">
+                  <h1 className="text-2xl font-bold">{t.appTitle}</h1>
+                  <div className="flex space-x-2 items-center">
+                    <button
+                      onClick={() => setLanguage(language === 'es' ? 'eu' : 'es')}
+                      className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-400 transition-colors"
+                    >
+                      {language === 'es' ? 'EU' : 'ES'}
+                    </button>
+                    
+                    {!userProfile.name && !userProfile.photo && (
+                      <button
+                        onClick={() => setShowProfile(true)}
+                        className="p-2 rounded-full bg-blue-500 hover:bg-blue-400"
+                        title={t.personalInfo}
+                      >
+                        <span className="text-sm">👤</span>
+                      </button>
+                    )}
+
+                    <button
+                      onClick={exportData}
+                      className="p-2 rounded-full bg-blue-500 hover:bg-blue-400"
+                      title={t.exportData}
+                    >
+                      <Download />
+                    </button>
+                    <label className="p-2 rounded-full bg-blue-500 hover:bg-blue-400 cursor-pointer" title={t.importData}>
+                      <Upload />
+                      <input type="file" accept=".json" onChange={importData} className="hidden" />
+                    </label>
+                  </div>
+                </div>
+                
+                <div className="bg-blue-500 rounded-lg p-3 mb-4">
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                      <div className="text-xl font-bold">{dives.length}</div>
+                      <div className="text-xs opacity-90">{t.dives}</div>
+                    </div>
+                    <div>
+                      <div className="text-xl font-bold">
+                        {dives.length > 0 ? Math.max(...dives.map(d => parseInt(d.maxDepth) || 0)) : 0}m
+                      </div>
+                      <div className="text-xs opacity-90">{t.maxDepth}</div>
+                    </div>
+                    <div>
+                      <div className="text-xl font-bold">
+                        {dives.reduce((acc, dive) => acc + (parseInt(dive.duration) || 0), 0)}{t.min}
+                      </div>
+                      <div className="text-xs opacity-90">{t.totalTime}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex space-x-2">
+                    <div className="flex-1 relative">
+                      <Search className="absolute left-3 top-3 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder={t.searchPlaceholder}
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 rounded-lg text-gray-800"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex space-x-2">
+                    <select
+                      value={filterDepth}
+                      onChange={(e) => setFilterDepth(e.target.value)}
+                      className="flex-1 p-2 rounded-lg text-gray-800"
+                    >
+                      <option value="all">{t.allDepths}</option>
+                      <option value="shallow">{t.shallowDives}</option>
+                      <option value="medium">{t.mediumDives}</option>
+                      <option value="deep">{t.deepDives}</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4">
+                {filteredDives.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="text-gray-400 text-6xl mb-4">🤿</div>
+                    <p className="text-gray-500 mb-4">
+                      {dives.length === 0 ? t.noDives : t.noResults}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {filteredDives.map((dive) => (
+                      <div
+                        key={dive.id}
+                        onClick={() => {
+                          setSelectedDive(dive);
+                          setCurrentView('detail');
+                        }}
+                        className="bg-white rounded-lg p-4 shadow-sm border-l-4 border-blue-500 cursor-pointer hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <div className="font-semibold text-blue-800">#{dive.diveNumber} - {dive.location}</div>
+                            <div className="text-sm text-gray-600">{dive.site}</div>
+                            <div className="text-xs text-purple-600 font-medium">🤿 {t.diveTypes[dive.diveType] || dive.diveType}</div>
+                          </div>
+                          <div className="text-right text-sm text-gray-500">
+                            <div>{dive.date}</div>
+                            <div>{dive.time}</div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex justify-between items-center text-sm">
+                          <div className="flex space-x-4">
+                            <span className="text-blue-600 font-semibold">{dive.maxDepth}m</span>
+                            <span className="flex items-center">
+                              <Clock className="mr-1" />
+                              {dive.duration}{t.min}
+                            </span>
+                            <span className="flex items-center">
+                              <Thermometer className="mr-1" />
+                              {dive.waterTemp}°C
+                            </span>
+                          </div>
+                        </div>
+                        
+                        {dive.wildlife && (
+                          <div className="mt-2 text-xs text-gray-600 bg-green-50 p-2 rounded">
+                            <Fish className="inline mr-1" />
+                            {dive.wildlife.substring(0, 80)}{dive.wildlife.length > 80 ? '...' : ''}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={() => setCurrentView('add')}
+                className="fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+              >
+                <Plus />
+              </button>
+            </div>
+          );
+        };
+
+        // Renderizar la aplicación
+        ReactDOM.render(<DivingLogApp />, document.getElementById('root'));
+    </script>
+</body>
+</html>
